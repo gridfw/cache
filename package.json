@@ -1,0 +1,22 @@
+{
+  "name": "gridfw-cache",
+  "version": "1.0.0",
+  "description": "cache for gridfw",
+  "main": "build/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gridfw/cache.git"
+  },
+  "keywords": [
+    "cache"
+  ],
+  "author": "coredigix",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gridfw/cache/issues"
+  },
+  "homepage": "https://github.com/gridfw/cache#readme"
+}
