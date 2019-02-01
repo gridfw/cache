@@ -24,38 +24,59 @@ module.exports = class Cache
 	 * @param {function} onRemove - callback when removing an antity
 	 * @param {function} create - create an antity
 	###
-	constructor: ->
+	constructor: (settings)->
+		throw new Error 'Settings required' unless settings
+		throw new Error 'settings.create expected functions' unless typeof settings.create is 'function'
+		throw new Error 'settings.onRemove expected functions' unless typeof settings.onRemove is 'function'
 		# cache object
 		# key: [lastStep, approximativeFileSize]
 		@<%=cache %> = _create null
 		@<%=bytes %>= 0
 		@<%=length %>= 0
+		@<%=create %> = _wrapCreate settings.create
+		@<%=onRemove %> = settings.onRemove
+		# log
+		@info = settings.info if typeof settings.info is 'function'
+		@error = settings.error if typeof settings.error is 'function'
 		return
 	# reload function
 	reload: (settings)->
 		settings ?= _create null
-		@<%=create %> = settings.create
-		@<%=onRemove %> = settings.onRemove
 		@<%=maxSize %> = settings.maxSize || 0
 		@<%=maxStep %> = settings.maxStep || 500 # remove item after 500 steps
-
 		# get method
 		if @<%=maxSize %> is 0 # disabled
-			Object.defineProperty this, 'get',
-				configurable: on
-				value: _getCacheDisabled
+			getMethod= _getCacheDisabled
+			@clear() # clear all data
+		# infinity, keep always data in memory
+		else if @<%=maxSize %> is Infinity
+			getMethod= _getCacheInfinity
+			@clear() # clear all data
 		# enabled
 		else
-			Object.defineProperty this, 'get',
-				configurable: on
-				value: _getCacheEnabled
+			getMethod= _getCacheEnabled
+		Object.defineProperty this, 'get',
+			configurable: on
+			value: getMethod
 		return
 	# error
 	error: (err)-> console.log 'Cache Error>> ', err
+	info: (info)-> console.info 'Cache Info>> ', info
 	# clear all data
 	clear: ->
+		# clear all data
+		cacheQ = @<%=cache %>
+		for k,v of cacheQ
+			try
+				delete cacheQ[k]
+				@<%=onRemove %> k
+			catch err
+				@error err
+		# flags
 		@<%=bytes %>= 0
 		@<%=length %>= 0
+		# return self
+		return this
 
 ### getters ###
 Object.defineProperties Cache.prototype,
@@ -81,20 +102,43 @@ _getCacheEnabled = (key)->
 	if unit
 		unit[0] = 0 # refresh step
 		value = unit[2]
+		throw 404 if value is null
 	else
-		value = @<%=create %> key
-		unit= @<%=cache %>[key] = [0, 0, value]
-		++@<%=length %>
-		# enable interval
-		unless cache.<%=interval %>
-			_cleanInterv this
-		# look for file size
-		fs.stat key, (err, stats)->
-			if stats
-				@<%=bytes %> += (unit[1] = stats.size)
+		try
+			value = @<%=create %> key
+			unit= @<%=cache %>[key] = [0, 0, value]
+			++@<%=length %>
+			# enable interval
+			unless cache.<%=interval %>
+				_cleanInterv this
+			# look for file size
+			fs.stat key, (err, stats)->
+				if stats
+					@<%=bytes %> += (unit[1] = stats.size)
+		catch err
+			if err is 404
+				@<%=cache %>[key] = [0, 0, null]
+			throw err
 	# return value
 	return value
 
+###
+# do not empty cache: will increase performance, but use more memory
+###
+_getCacheInfinity= (key)->
+	value= @<%=cache %>[key]
+	unless value
+		# entry not found
+		throw 404 if value is null
+		# new entry
+		try
+			value= @<%=cache %>[key]= @<%=create %> key
+		catch err
+			# keep this info
+			@<%=cache %>[key]= null if err is 404
+			# throw error
+			throw 404
+	return value
 
 ### interval menage ###
 INTERVALS = [10000, 5000, 2000, 1000, 500]
@@ -140,6 +184,19 @@ _cleanInterv = (cache)->
 		# change interval if not the same
 		unless currentInterval is INTERVALS[cIntervIdx]
 			currentInterval= cache.<%=currentInterval %> = INTERVALS[cIntervIdx]
+			cache.info "Change interval to: #{currentInterval}"
 			clearInterval cache.<%=interval %>
 			cache.<%=interval %> = setInterval (-> _cleanInterv cache), currentInterval
 	return
+
+###*
+ * Wrap create
+###
+_wrapCreate = (fx)->
+	(key)->
+		try
+			return fx key
+		catch err
+			throw 404 if err? and (err.code is 'MODULE_NOT_FOUND') and (err.message.indexOf(key) isnt -1) # module not found
+			throw err
+		

@@ -18,5 +18,15 @@
   "bugs": {
     "url": "https://github.com/gridfw/cache/issues"
   },
+  "devDependencies": {
+    "cli-table": "^0.3.1",
+    "gulp": "^4.0.0",
+    "gulp-chug": "^0.5.1",
+    "gulp-coffeescript": "0.0.15",
+    "gulp-include": "^2.3.1",
+    "gulp-rename": "^1.4.0",
+    "gulp-uglify-es": "^1.0.4",
+    "gulp-util": "^3.0.8"
+  },
   "homepage": "https://github.com/gridfw/cache#readme"
 }

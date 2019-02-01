@@ -7,22 +7,33 @@ coffeescript	= require 'gulp-coffeescript'
 
 GfwCompiler		= require '../compiler'
 
+# settings
+settings=
+	mode: gutil.env.mode || 'dev'
+	isProd: gutil.env.mode is 'prod'
 # compile final values (consts to be remplaced at compile time)
 # handlers
 compileCoffee = ->
-	gulp.src 'assets/**/[!_]*.coffee', nodir: true
+	glp= gulp.src 'assets/**/[!_]*.coffee', nodir: true
 		# include related files
 		.pipe include hardFail: true
+		# template
+		.pipe GfwCompiler.template(settings).on 'error', GfwCompiler.logError
 		# convert to js
 		.pipe coffeescript bare: true
-		# template
-		.pipe GfwCompiler.template()
 		# uglify when prod mode
-		.pipe uglify()
-		# save 
-		.pipe gulp.dest 'build'
-		.on 'error', GfwCompiler.logError
+	# if is prod
+	if settings.isProd
+		glp = glp.pipe uglify()
+	# save 
+	glp.pipe gulp.dest 'build'
+	.on 'error', GfwCompiler.logError
 # watch files
-watch = ->
-	gulp.watch ['assets/**/*.coffee'], compileCoffee
+watch = (cb)->
+	unless settings.isProd
+		gulp.watch ['assets/**/*.coffee'], compileCoffee
+	cb()
 	return
+
+# default task
+gulp.task 'default', gulp.series compileCoffee, watch
