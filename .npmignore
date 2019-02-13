@@ -5,3 +5,4 @@ gulp-file.tmp.*
 
 # Dependency directories
 node_modules/
+assets/

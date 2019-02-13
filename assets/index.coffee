@@ -15,6 +15,8 @@ const create = 'c',
 _defineProperty = Object.defineProperty
 _create = Object.create
 
+fs = require 'fs'
+
 ### CACHE ###
 module.exports = class Cache
 	###*
@@ -109,7 +111,7 @@ _getCacheEnabled = (key)->
 			unit= @<%=cache %>[key] = [0, 0, value]
 			++@<%=length %>
 			# enable interval
-			unless cache.<%=interval %>
+			unless @<%=interval %>
 				_cleanInterv this
 			# look for file size
 			fs.stat key, (err, stats)->
