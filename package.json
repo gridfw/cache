@@ -1,6 +1,6 @@
 {
   "name": "gridfw-cache",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "cache for gridfw",
   "main": "build/index.js",
   "scripts": {
@@ -20,11 +20,11 @@
   },
   "devDependencies": {
     "cli-table": "^0.3.1",
-    "gridfw-compiler": "^1.0.0",
-    "gulp": "^4.0.0",
+    "gridfw-compiler": "^1.2.0",
+    "gulp": "^4.0.2",
     "gulp-chug": "^0.5.1",
     "gulp-coffeescript": "0.0.15",
-    "gulp-include": "^2.3.1",
+    "gulp-include": "^2.4.1",
     "gulp-rename": "^1.4.0",
     "gulp-uglify-es": "^1.0.4",
     "gulp-util": "^3.0.8"
